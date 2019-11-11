@@ -1,4 +1,4 @@
-#Dataset
+# Dataset
 The train and test sets of the dataset are saved in UrbanSound8K_train.pkl, and UrbanSound8K_test.pkl.
 The dataset is structured as a list of dictionaries. Each dict in the list corresponds to a different audio segment from an audio file. The dicts contain the following keys:
 
@@ -13,7 +13,7 @@ The dataset is structured as a list of dictionaries. Each dict in the list corre
 •	Tonnetz
 
 
-#Dataloader
+# Dataloader
 In dataset.py, the body of a PyTorch dataloader can be found to load UrbanSound8K dataset. You first have to edit this file to load the different inputs (LMC, MC, and MLMC features) for training your convolutional networks. The code already loads the labels, and the unique identifiers of the files that the audio segments belong to. You have to modify the commented lines.
 Then to use it, include the following lines in your code:
 
