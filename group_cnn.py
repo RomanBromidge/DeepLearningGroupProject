@@ -19,7 +19,7 @@ from pathlib import Path
 torch.backends.cudnn.benchmark = True
 
 parser = argparse.ArgumentParser(
-    description="Train a simple CNN on CIFAR-10",
+    description="Train CNN for environment sound classification",
     formatter_class=argparse.ArgumentDefaultsHelpFormatter,
 )
 default_dataset_dir = Path.home() / ".cache" / "torch" / "datasets"
@@ -37,6 +37,12 @@ parser.add_argument(
     default=20,
     type=int,
     help="Number of epochs (passes through the entire dataset) to train for",
+)
+parser.add_argument(
+    "--sgd-momentum",
+    default=0.9,
+    type=float,
+    help='Momentum value for the SGD optimizer.'
 )
 parser.add_argument(
     "--val-frequency",
@@ -113,7 +119,7 @@ def main(args):
     criterion = nn.CrossEntropyLoss()
 
     ## TASK 11: Define the optimizer
-    optimizer = torch.optim.SGD(model.parameters(), lr=args.learning_rate, momentum=0.9)
+    optimizer = torch.optim.SGD(model.parameters(), lr=args.learning_rate, momentum=args.sgd_momentum)
 
     log_dir = get_summary_writer_log_dir(args)
     print(f"Writing logs to {log_dir}")
