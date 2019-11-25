@@ -123,7 +123,7 @@ def main(args):
             flush_secs=5
     )
     trainer = Trainer(
-        model, train_loader, test_loader, criterion, optimizer, summary_writer, DEVICE
+        model, train_loader, val_loader, criterion, optimizer, summary_writer, DEVICE
     )
 
     trainer.train(
@@ -149,7 +149,7 @@ class CNN(nn.Module):
             in_channels=self.input_shape.channels,
             out_channels=32,
             kernel_size=(3, 3),
-            stride=(2, 2),
+            # stride=(2, 2),
             padding=(1, 1),
         )
         self.initialise_layer(self.conv1)
@@ -160,7 +160,7 @@ class CNN(nn.Module):
             in_channels=32,
             out_channels=32,
             kernel_size=(3, 3),
-            stride=(2, 2),
+            # stride=(2, 2),
             padding=(1, 1)
         )
         self.initialise_layer(self.conv2)
@@ -168,14 +168,14 @@ class CNN(nn.Module):
         self.conv2_drop = nn.Dropout2d()
 
         #Max pooling
-        self.pool1 = nn.MaxPool2d(kernel_size=(2, 2), stride=(2, 2))
+        self.pool1 = nn.MaxPool2d(kernel_size=(2, 2), stride=(2, 2), padding=(1,1))
 
         #Third convolutional layer
         self.conv3 = nn.Conv2d(
-            in_channels=64,
+            in_channels=32,
             out_channels=64,
             kernel_size=(3, 3),
-            stride=(2, 2),
+            # stride=(2, 2),
             padding=(1, 1),
         )
         self.initialise_layer(self.conv1)
@@ -186,14 +186,14 @@ class CNN(nn.Module):
             in_channels=64,
             out_channels=64,
             kernel_size=(3, 3),
-            stride=(2, 2),
+            # stride=(2, 2),
             padding=(1, 1)
         )
         self.initialise_layer(self.conv2)
         self.conv4_bn = nn.BatchNorm2d(64)
 
         #Max pooling
-        self.pool2 = nn.MaxPool2d(kernel_size=(2, 2), stride=(2, 2))
+        self.pool2 = nn.MaxPool2d(kernel_size=(2, 2), stride=(2, 2), padding=(1,1))
 
         #First fully connected layer
         self.fc1 = nn.Linear(15488, 1024)
@@ -213,7 +213,7 @@ class CNN(nn.Module):
         x = F.relu(self.conv4_bn(self.conv4(x)))
         x = self.pool2(x)
         x = torch.flatten(x, start_dim=1)
-        x = F.sigmoid(self.fc1_bn(self.fc1(x)))
+        x = torch.sigmoid(self.fc1_bn(self.fc1(x)))
         x = self.fc2(x)
         return x
 
@@ -224,6 +224,14 @@ class CNN(nn.Module):
         if hasattr(layer, "weight"):
             nn.init.kaiming_normal_(layer.weight)
 
+
+def make_label(index, length):
+    label = [0]*10
+    label[index] = 1
+    return label
+
+def make_labels(targets):
+    return torch.FloatTensor(list(map(lambda x: make_label(x,10), targets)))
 
 class Trainer:
     def __init__(
@@ -245,13 +253,6 @@ class Trainer:
         self.summary_writer = summary_writer
         self.step = 0
 
-    def make_label(index, length):
-        label = torch.zeros(length)
-        label[index] = 1
-        return label
-
-    def make_labels(targets):
-        return list(map(lambda x: make_label(x,10), targets))
 
     def train(
         self,
@@ -265,19 +266,18 @@ class Trainer:
         for epoch in range(start_epoch, epochs):
             self.model.train()
             data_load_start_time = time.time()
-            for i, (inputs, targets, filenames) in enumerate(train_loader):
+            for i, (inputs, targets, filenames) in enumerate(self.train_loader):
             # for batch, labels in self.train_loader:
                 batch = inputs.to(self.device)
                 labels = make_labels(targets)
                 labels = labels.to(self.device)
                 data_load_end_time = time.time()
 
-
                 ## TASK 1: Compute the forward pass of the model, print the output shape
                 ##         and quit the program
                 logits = self.model.forward(batch)
-                print(logits.shape)
-                import sys; sys.exit(1)
+                # print(logits.shape)
+                # import sys; sys.exit(1)
 
                 ## TASK 7: Rename `output` to `logits`, remove the output shape printing
                 ##         and get rid of the `import sys; sys.exit(1)`
