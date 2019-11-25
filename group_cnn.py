@@ -143,6 +143,7 @@ class CNN(nn.Module):
         self.class_count = class_count
 
         self.dropout = nn.Dropout(p=dropout)
+        self.dropout2d = nn.Dropout2d(p=dropout)
 
         #First convolutional layer
         self.conv1 = nn.Conv2d(
@@ -165,7 +166,6 @@ class CNN(nn.Module):
         )
         self.initialise_layer(self.conv2)
         self.conv2_bn = nn.BatchNorm2d(32)
-        self.conv2_drop = nn.Dropout2d()
 
         #Max pooling
         self.pool1 = nn.MaxPool2d(kernel_size=(2, 2), stride=(2, 2), padding=(1,1))
@@ -207,13 +207,13 @@ class CNN(nn.Module):
     def forward(self, images: torch.Tensor) -> torch.Tensor:
         #Perform the forward pass through the network
         x = F.relu(self.conv1_bn(self.conv1(images)))
-        x = F.relu(self.conv2_bn(self.conv2(x)))
+        x = F.relu(self.conv2_bn(self.conv2(self.dropout2d(x))))
         x = self.pool1(x)
         x = F.relu(self.conv3_bn(self.conv3(x)))
-        x = F.relu(self.conv4_bn(self.conv4(x)))
+        x = F.relu(self.conv4_bn(self.conv4(self.dropout2d(x))))
         x = self.pool2(x)
         x = torch.flatten(x, start_dim=1)
-        x = torch.sigmoid(self.fc1_bn(self.fc1(x)))
+        x = torch.sigmoid(self.fc1_bn(self.fc1(self.dropout(x))))
         x = self.fc2(x)
         return x
 
