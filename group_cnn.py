@@ -351,9 +351,9 @@ class Trainer:
 
         # No need to track gradients for validation, we're not optimizing.
         with torch.no_grad():
-            for batch, labels in self.val_loader:
-                batch = batch.to(self.device)
-                labels = labels.to(self.device)
+            for i, (inputs, targets, filenames) in enumerate(val_loader):
+                batch = inputs.to(self.device)
+                labels = targets.to(self.device)
                 logits = self.model(batch)
                 loss = self.criterion(logits, labels)
                 total_loss += loss.item()
