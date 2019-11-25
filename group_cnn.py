@@ -225,13 +225,13 @@ class CNN(nn.Module):
             nn.init.kaiming_normal_(layer.weight)
 
 
-def make_label(index, length):
-    label = [0]*10
-    label[index] = 1
-    return label
-
-def make_labels(targets):
-    return torch.FloatTensor(list(map(lambda x: make_label(x,10), targets)))
+# def make_label(index, length):
+#     label = [0]*10
+#     label[index] = 1
+#     return label
+#
+# def make_labels(targets):
+#     return torch.LongTensor(list(map(lambda x: make_label(x,10), targets)))
 
 class Trainer:
     def __init__(
@@ -269,8 +269,7 @@ class Trainer:
             for i, (inputs, targets, filenames) in enumerate(self.train_loader):
             # for batch, labels in self.train_loader:
                 batch = inputs.to(self.device)
-                labels = make_labels(targets)
-                labels = labels.to(self.device)
+                labels = targets.to(self.device)
                 data_load_end_time = time.time()
 
                 ## TASK 1: Compute the forward pass of the model, print the output shape
