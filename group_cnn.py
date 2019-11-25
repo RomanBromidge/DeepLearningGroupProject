@@ -94,14 +94,14 @@ def main(args):
     transform = transforms.ToTensor()
     mode = 'LMC'
     train_loader = torch.utils.data.DataLoader(
-      UrbanSound8KDataset(‘UrbanSound8K_train.pkl’, mode),
+      UrbanSound8KDataset('UrbanSound8K_train.pkl', mode),
       batch_size=args.batch_size,
       shuffle=True,
       num_workers=args.worker_count,
       pin_memory=True
     )
     val_loader = torch.utils.data.DataLoader(
-     UrbanSound8KDataset(‘UrbanSound8K_test.pkl’, mode),
+     UrbanSound8KDataset('UrbanSound8K_test.pkl', mode),
      batch_size=args.batch_size,
      shuffle=True,
      num_workers=args.worker_count,
