@@ -351,7 +351,7 @@ class Trainer:
 
         # No need to track gradients for validation, we're not optimizing.
         with torch.no_grad():
-            for i, (inputs, targets, filenames) in enumerate(val_loader):
+            for i, (inputs, targets, filenames) in enumerate(self.val_loader):
                 batch = inputs.to(self.device)
                 labels = targets.to(self.device)
                 logits = self.model(batch)
