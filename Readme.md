@@ -30,9 +30,9 @@ val_loader = torch.utils.data.DataLoader(
     num_workers=8, pin_memory=True)
 
 for i, (input, target, filename) in enumerate(train_loader):
-#           training code
+#training code
 
 for i, (input, target, filename) in enumerate(val_loader):
-#           validation code
+#validation code
 
 In the code above, input is a batch of 32 log-mel spectrograms, target are their corresponding labels, and filename are the names of the audio files each segment belongs to (useful for testing). The variable mode should take one of the values: ‘LMC’, ‘MC’, ‘MLMC’.
