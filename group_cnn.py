@@ -12,6 +12,7 @@ from torch.optim.optimizer import Optimizer
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from torchvision import transforms
+from dataset import UrbanSound8KDataset
 
 import argparse
 from pathlib import Path
@@ -91,26 +92,20 @@ else:
 
 def main(args):
     transform = transforms.ToTensor()
-    args.dataset_root.mkdir(parents=True, exist_ok=True)
-    train_dataset = torchvision.datasets.CIFAR10(
-        args.dataset_root, train=True, download=True, transform=transform
-    )
-    test_dataset = torchvision.datasets.CIFAR10(
-        args.dataset_root, train=False, download=False, transform=transform
-    )
+    mode = 'LMC'
     train_loader = torch.utils.data.DataLoader(
-        train_dataset,
-        shuffle=True,
-        batch_size=args.batch_size,
-        pin_memory=True,
-        num_workers=args.worker_count,
+      UrbanSound8KDataset(‘UrbanSound8K_train.pkl’, mode),
+      batch_size=args.batch_size,
+      shuffle=True,
+      num_workers=args.worker_count,
+      pin_memory=True
     )
-    test_loader = torch.utils.data.DataLoader(
-        test_dataset,
-        shuffle=False,
-        batch_size=args.batch_size,
-        num_workers=args.worker_count,
-        pin_memory=True,
+    val_loader = torch.utils.data.DataLoader(
+     UrbanSound8KDataset(‘UrbanSound8K_test.pkl’, mode),
+     batch_size=args.batch_size,
+     shuffle=True,
+     num_workers=args.worker_count,
+     pin_memory=True
     )
 
     model = CNN(height=85, width=41, channels=1, class_count=10, dropout=args.dropout)
@@ -250,6 +245,14 @@ class Trainer:
         self.summary_writer = summary_writer
         self.step = 0
 
+    def make_label(index, length):
+        label = torch.zeros(length)
+        label[index] = 1
+        return label
+
+    def make_labels(targets):
+        return list(map(lambda x: make_label(x,10), targets))
+
     def train(
         self,
         epochs: int,
@@ -262,8 +265,10 @@ class Trainer:
         for epoch in range(start_epoch, epochs):
             self.model.train()
             data_load_start_time = time.time()
-            for batch, labels in self.train_loader:
-                batch = batch.to(self.device)
+            for i, (inputs, targets, filenames) in enumerate(train_loader):
+            # for batch, labels in self.train_loader:
+                batch = inputs.to(self.device)
+                labels = make_labels(targets)
                 labels = labels.to(self.device)
                 data_load_end_time = time.time()
 
