@@ -1,6 +1,6 @@
 import time
 from multiprocessing import cpu_count
-from typing import Union, NamedTuple
+from typing import Union
 
 import torch
 import torch.backends.cudnn
