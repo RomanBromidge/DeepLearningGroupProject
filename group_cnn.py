@@ -77,6 +77,17 @@ parser.add_argument(
     type=float,
     help="Probability of dropped neurons 0-1",
 )
+parser.add_argument(
+    "--checkpoint-path",
+    default=Path("checkpoint.pkl"),
+    type=Path,
+    help="Provide a file to store checkpoints of the model parameters during training."
+)
+parser.add_argument(
+    "--checkpoint-frequency",
+    type=int, default=1,
+    help="Save a checkpoint every N epochs"
+)
 
 
 if torch.cuda.is_available():
@@ -118,7 +129,8 @@ def main(args):
             flush_secs=5
     )
     trainer = Trainer(
-        model, train_loader, val_loader, criterion, optimizer, summary_writer, DEVICE
+        model, train_loader, val_loader, criterion, optimizer, summary_writer,
+        DEVICE, args.checkpoint_path, checkpoint_frequency = args.checkpoint_frequency
     )
 
     trainer.train(
@@ -140,6 +152,8 @@ class Trainer:
         optimizer: Optimizer,
         summary_writer: SummaryWriter,
         device: torch.device,
+        checkpoint_path: Path,
+        checkpoint_frequency: int = 5
     ):
         self.model = model.to(device)
         self.device = device
@@ -149,6 +163,8 @@ class Trainer:
         self.optimizer = optimizer
         self.summary_writer = summary_writer
         self.step = 0
+        self.checkpoint_path = checkpoint_path
+        self.checkpoint_frequency = checkpoint_frequency
 
 
     def train(
@@ -169,23 +185,18 @@ class Trainer:
                 labels = targets.to(self.device)
                 data_load_end_time = time.time()
 
-                ## TASK 1: Compute the forward pass of the model, print the output shape
-                ##         and quit the program
+                ## Forward pass through the network.
                 logits = self.model.forward(batch)
                 # print(logits.shape)
                 # import sys; sys.exit(1)
 
-                ## TASK 7: Rename `output` to `logits`, remove the output shape printing
-                ##         and get rid of the `import sys; sys.exit(1)`
-
-                ## TASK 9: Compute the loss using self.criterion and
-                ##         store it in a variable called `loss`
+                ## Compute the loss using the specified criterion.
                 loss = self.criterion(logits, labels)
 
-                ## TASK 10: Compute the backward pass
+                ## Compute the backward pass
                 loss.backward()
 
-                ## TASK 12: Step the optimizer and then zero out the gradient buffers.
+                ## Step the optimizer and then zero out the gradient buffers.
                 self.optimizer.step()
                 self.optimizer.zero_grad()
 
@@ -199,6 +210,8 @@ class Trainer:
                     self.log_metrics(epoch, accuracy, loss, data_load_time, step_time)
                 if ((self.step + 1) % print_frequency) == 0:
                     self.print_metrics(epoch, accuracy, loss, data_load_time, step_time)
+
+                self.model_checkpoint(accuracy, epoch, epochs)
 
                 self.step += 1
                 data_load_start_time = time.time()
@@ -274,6 +287,15 @@ class Trainer:
                 self.step
         )
         print(f"validation loss: {average_loss:.5f}, accuracy: {accuracy * 100:2.2f}")
+
+    def model_checkpoint(self, accuracy, epoch, epochs):
+        if (epoch + 1) % self.checkpoint_frequency or (epoch + 1) == epochs:
+            print(f"Saving model to {self.checkpoint_path}")
+            torch.save({
+                'epoch': epoch,
+                'model': self.model.state_dict(),
+                'accuracy': accuracy
+            }, self.checkpoint_path)
 
 
 def compute_accuracy(
