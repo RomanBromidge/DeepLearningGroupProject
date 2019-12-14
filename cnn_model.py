@@ -80,13 +80,13 @@ class CNN(nn.Module):
     def forward(self, images: torch.Tensor) -> torch.Tensor:
         #Perform the forward pass through the network
         x = F.relu(self.conv1_bn(self.conv1(images)))
-        x = F.relu(self.conv2_bn(self.conv2(self.dropout2d(x))))
+        x = self.dropout2d(F.relu(self.conv2_bn(self.conv2(x))))
         x = self.pool1(x)
         x = F.relu(self.conv3_bn(self.conv3(x)))
-        x = F.relu(self.conv4_bn(self.conv4(self.dropout2d(x))))
+        x = self.dropout2d(F.relu(self.conv4_bn(self.conv4(x))))
         x = self.pool2(x)
         x = torch.flatten(x, start_dim=1)
-        x = torch.sigmoid(self.fc1_bn(self.fc1(self.dropout(x))))
+        x = self.dropout(torch.sigmoid(self.fc1_bn(self.fc1(x))))
         x = self.fc2(x)
         return x
 
