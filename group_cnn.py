@@ -119,8 +119,8 @@ def main(args):
     ## TASK 8: Redefine the criterion to be softmax cross entropy
     criterion = nn.CrossEntropyLoss()
 
-    ## TASK 11: Define the optimizer
-    optimizer = torch.optim.SGD(model.parameters(), lr=args.learning_rate, momentum=args.sgd_momentum)
+    ## Use adam optimizer. Weight decay indicates L-2 regularization is applied to weights.
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate, weight_decay=1)
 
     log_dir = get_summary_writer_log_dir(args)
     print(f"Writing logs to {log_dir}")
@@ -309,6 +309,15 @@ def compute_accuracy(
     assert len(labels) == len(preds)
     return float((labels == preds).sum()) / len(labels)
 
+# def per_class_accuracy(labels, preds, number_classes):
+#     """ Calculate the accuracy for each class. """
+#     correct = [x == y for x,y in zip(labels,preds)]
+#     accuracies = np.zeros(number_classes)
+#     # Assuming there is the same number of examples per class:
+#     N = len(labels)/number_classes
+#     for index,class in enumerate(labels):
+#         accuracies[class] += correct[index]
+#     return accuracies/N
 
 def get_summary_writer_log_dir(args: argparse.Namespace) -> str:
     """Get a unique directory that hasn't been logged to before for use with a TB
