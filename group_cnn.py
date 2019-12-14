@@ -85,7 +85,7 @@ parser.add_argument(
 )
 parser.add_argument(
     "--checkpoint-frequency",
-    type=int, default=1,
+    type=int, default=5,
     help="Save a checkpoint every N epochs"
 )
 
@@ -120,7 +120,7 @@ def main(args):
     criterion = nn.CrossEntropyLoss()
 
     ## Use adam optimizer. Weight decay indicates L-2 regularization is applied to weights.
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate, weight_decay=1)
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate, weight_decay=1e-5)
 
     log_dir = get_summary_writer_log_dir(args)
     print(f"Writing logs to {log_dir}")
@@ -210,12 +210,10 @@ class Trainer:
                     self.log_metrics(epoch, accuracy, loss, data_load_time, step_time)
                 if ((self.step + 1) % print_frequency) == 0:
                     self.print_metrics(epoch, accuracy, loss, data_load_time, step_time)
-
-                self.model_checkpoint(accuracy, epoch, epochs)
-
                 self.step += 1
                 data_load_start_time = time.time()
 
+            self.model_checkpoint(accuracy, epoch, epochs)
             self.summary_writer.add_scalar("epoch", epoch, self.step)
             if ((epoch + 1) % val_frequency) == 0:
                 self.validate()
@@ -289,7 +287,7 @@ class Trainer:
         print(f"validation loss: {average_loss:.5f}, accuracy: {accuracy * 100:2.2f}")
 
     def model_checkpoint(self, accuracy, epoch, epochs):
-        if (epoch + 1) % self.checkpoint_frequency or (epoch + 1) == epochs:
+        if (epoch + 1) % self.checkpoint_frequency == 0 or (epoch + 1) == epochs:
             print(f"Saving model to {self.checkpoint_path}")
             torch.save({
                 'epoch': epoch,
