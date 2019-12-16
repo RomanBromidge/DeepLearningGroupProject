@@ -88,6 +88,11 @@ parser.add_argument(
     type=int, default=5,
     help="Save a checkpoint every N epochs"
 )
+parser.add_argument(
+    "--mode",
+    type=str, default='LMC',
+    help="Mode of network to train."
+)
 
 
 if torch.cuda.is_available():
@@ -98,7 +103,7 @@ else:
 
 def main(args):
     transform = transforms.ToTensor()
-    mode = 'LMC'
+    mode = args.mode
     train_loader = torch.utils.data.DataLoader(
       UrbanSound8KDataset('UrbanSound8K_train.pkl', mode),
       batch_size=args.batch_size,
@@ -119,8 +124,8 @@ def main(args):
     ## TASK 8: Redefine the criterion to be softmax cross entropy
     criterion = nn.CrossEntropyLoss()
 
-    ## Use adam optimizer. Weight decay indicates L-2 regularization is applied to weights.
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate, weight_decay=1e-5)
+    ## Use adam optimizer. AdamW is Adam with L-2 regularisation.
+    optimizer = torch.optim.AdamW(model.parameters(), lr=args.learning_rate)
 
     log_dir = get_summary_writer_log_dir(args)
     print(f"Writing logs to {log_dir}")

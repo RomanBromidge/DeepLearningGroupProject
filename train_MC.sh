@@ -10,5 +10,5 @@ module purge
 # load in the module dependencies for this script
 module load "languages/anaconda3/2019.07-3.6.5-tflow-1.14"
 
-# no arguments: hyperparameter value defined by default.
-python group_cnn.py --checkpoint-path checkpoint_LMC.py
+# hyperparameter value defined by default.
+python group_cnn.py --mode MC --checkpoint-path checkpoint_MC.py --logdir logs_MC --epochs 30
