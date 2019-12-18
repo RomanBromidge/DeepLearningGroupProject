@@ -71,7 +71,7 @@ class CNN(nn.Module):
 
         #First fully connected layer
         size = 15488
-        if mode = 'MLMC':
+        if mode == 'MLMC':
             size = 26048
         self.fc1 = nn.Linear(size, 1024)
         self.initialise_layer(self.fc1)
