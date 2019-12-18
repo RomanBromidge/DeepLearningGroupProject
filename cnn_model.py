@@ -10,7 +10,8 @@ class ImageShape(NamedTuple):
     channels: int
 
 class CNN(nn.Module):
-    def __init__(self, height: int, width: int, channels: int, class_count: int, dropout: float):
+    def __init__(self, height: int, width: int, channels: int, class_count: int, dropout: float,
+                    mode: str):
         super().__init__()
         self.input_shape = ImageShape(height=height, width=width, channels=channels)
         self.class_count = class_count
@@ -69,7 +70,10 @@ class CNN(nn.Module):
         self.pool2 = nn.MaxPool2d(kernel_size=(2, 2), stride=(2, 2), padding=(1,1))
 
         #First fully connected layer
-        self.fc1 = nn.Linear(15488, 1024)
+        size = 15488
+        if mode = 'MLMC':
+            size = 26048
+        self.fc1 = nn.Linear(size, 1024)
         self.initialise_layer(self.fc1)
         self.fc1_bn = nn.BatchNorm1d(1024)
 
