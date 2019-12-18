@@ -125,7 +125,7 @@ def main(args):
     criterion = nn.CrossEntropyLoss()
 
     ## Use adam optimizer. AdamW is Adam with L-2 regularisation.
-    optimizer = torch.optim.AdamW(model.parameters(), lr=args.learning_rate)
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate, weight_decay=1e-5)
 
     log_dir = get_summary_writer_log_dir(args)
     print(f"Writing logs to {log_dir}")
