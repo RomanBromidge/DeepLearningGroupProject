@@ -279,6 +279,10 @@ class Trainer:
         )
         average_loss = total_loss / len(self.val_loader)
 
+        class_accuracies = per_class_accuracy(
+            np.array(results["labels"]), np.array(results["preds"])
+        )
+
         self.summary_writer.add_scalars(
                 "accuracy",
                 {"test": accuracy},
@@ -290,6 +294,17 @@ class Trainer:
                 self.step
         )
         print(f"validation loss: {average_loss:.5f}, accuracy: {accuracy * 100:2.2f}")
+
+        print(f"ac: {class_accuracies[0].item() * 100:2.2f}")
+        print(f"ch: {class_accuracies[1].item() * 100:2.2f}")
+        print(f"cp: {class_accuracies[2].item() * 100:2.2f}")
+        print(f"db: {class_accuracies[3].item() * 100:2.2f}")
+        print(f"dr: {class_accuracies[4].item() * 100:2.2f}")
+        print(f"ei: {class_accuracies[5].item() * 100:2.2f}")
+        print(f"gs: {class_accuracies[6].item() * 100:2.2f}")
+        print(f"jh: {class_accuracies[7].item() * 100:2.2f}")
+        print(f"si: {class_accuracies[8].item() * 100:2.2f}")
+        print(f"sm: {class_accuracies[9].item() * 100:2.2f}")
 
     def model_checkpoint(self, accuracy, epoch, epochs):
         if (epoch + 1) % self.checkpoint_frequency == 0 or (epoch + 1) == epochs:
@@ -312,15 +327,21 @@ def compute_accuracy(
     assert len(labels) == len(preds)
     return float((labels == preds).sum()) / len(labels)
 
-# def per_class_accuracy(labels, preds, number_classes):
-#     """ Calculate the accuracy for each class. """
-#     correct = [x == y for x,y in zip(labels,preds)]
-#     accuracies = np.zeros(number_classes)
-#     # Assuming there is the same number of examples per class:
-#     N = len(labels)/number_classes
-#     for index,class in enumerate(labels):
-#         accuracies[class] += correct[index]
-#     return accuracies/N
+def per_class_accuracy(
+    labels: Union[torch.Tensor, np.ndarray], preds: Union[torch.Tensor, np.ndarray]
+) -> torch.Tensor:
+    """
+    Args:
+        labels: ``(batch_size, class_count)`` tensor or array containing example labels
+        preds: ``(batch_size, class_count)`` tensor or array containing model prediction
+    """
+
+    class_accuracies = torch.zeros(10,)
+    for i in range(10):
+        idx = labels == i
+        class_accuracies[i] = float((labels[idx] == preds[idx]).sum()) / idx.sum()
+
+    return class_accuracies
 
 def get_summary_writer_log_dir(args: argparse.Namespace) -> str:
     """Get a unique directory that hasn't been logged to before for use with a TB
