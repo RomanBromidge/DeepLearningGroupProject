@@ -105,8 +105,6 @@ def validate_single(model, validation_loader, criterion, device):
 
     with torch.no_grad():
         for i, (inputs, targets, filenames) in enumerate(validation_loader):
-            print(inputs.shape)
-            import sys; sys.exit()
             batch = inputs.to(device)
             labels = targets.to(device)
             logits = model(batch)

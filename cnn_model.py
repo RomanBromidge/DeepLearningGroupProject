@@ -26,6 +26,7 @@ class CNN(nn.Module):
             kernel_size=(3, 3),
             # stride=(2, 2),
             padding=(1, 1),
+            bias = False
         )
         self.initialise_layer(self.conv1)
         self.conv1_bn = nn.BatchNorm2d(32)
@@ -36,7 +37,8 @@ class CNN(nn.Module):
             out_channels=32,
             kernel_size=(3, 3),
             # stride=(2, 2),
-            padding=(1, 1)
+            padding=(1, 1),
+            bias = False
         )
         self.initialise_layer(self.conv2)
         self.conv2_bn = nn.BatchNorm2d(32)
@@ -51,6 +53,7 @@ class CNN(nn.Module):
             kernel_size=(3, 3),
             # stride=(2, 2),
             padding=(1, 1),
+            bias = False
         )
         self.initialise_layer(self.conv1)
         self.conv3_bn = nn.BatchNorm2d(64)
@@ -61,7 +64,8 @@ class CNN(nn.Module):
             out_channels=64,
             kernel_size=(3, 3),
             # stride=(2, 2),
-            padding=(1, 1)
+            padding=(1, 1),
+            bias = False
         )
         self.initialise_layer(self.conv2)
         self.conv4_bn = nn.BatchNorm2d(64)
@@ -73,7 +77,7 @@ class CNN(nn.Module):
         size = 15488
         if mode == 'MLMC':
             size = 26048
-        self.fc1 = nn.Linear(size, 1024)
+        self.fc1 = nn.Linear(size, 1024, bias = False)
         self.initialise_layer(self.fc1)
         self.fc1_bn = nn.BatchNorm1d(1024)
 
@@ -97,6 +101,7 @@ class CNN(nn.Module):
     @staticmethod
     def initialise_layer(layer):
         if hasattr(layer, "bias"):
-            nn.init.zeros_(layer.bias)
+            if type(layer.bias) != type(None):
+                nn.init.zeros_(layer.bias)
         if hasattr(layer, "weight"):
             nn.init.kaiming_normal_(layer.weight)
