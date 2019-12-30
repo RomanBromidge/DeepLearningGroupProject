@@ -17,6 +17,7 @@ from dataset import UrbanSound8KDataset
 import argparse
 from pathlib import Path
 from cnn_model import CNN
+from validate import validate_single
 
 torch.backends.cudnn.benchmark = True
 
@@ -78,6 +79,12 @@ parser.add_argument(
     help="Probability of dropped neurons 0-1",
 )
 parser.add_argument(
+    "--weight-decay",
+    default=1e-5,
+    type=float,
+    help="Weight decay: parameter related to L-2 regularisation.",
+)
+parser.add_argument(
     "--checkpoint-path",
     default=Path("checkpoint.pkl"),
     type=Path,
@@ -125,8 +132,8 @@ def main(args):
     criterion = nn.CrossEntropyLoss()
 
     ## Use adam optimizer. AdamW is Adam with L-2 regularisation.
-    ## optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate, weight_decay=1e-5)
-    optimizer = torch.optim.SGD(model.parameters(), args.learning_rate, momentum = 0.9, weight_decay=1e-5)
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
+    ##optimizer = torch.optim.SGD(model.parameters(), args.learning_rate, momentum = 0.9, weight_decay=args.weight_decay)
 
     log_dir = get_summary_writer_log_dir(args)
     print(f"Writing logs to {log_dir}")
@@ -259,30 +266,9 @@ class Trainer:
         )
 
     def validate(self):
-        results = {"preds": [], "labels": []}
-        total_loss = 0
-        self.model.eval()
 
-        # No need to track gradients for validation, we're not optimizing.
-        with torch.no_grad():
-            for i, (inputs, targets, filenames) in enumerate(self.val_loader):
-                batch = inputs.to(self.device)
-                labels = targets.to(self.device)
-                logits = self.model(batch)
-                loss = self.criterion(logits, labels)
-                total_loss += loss.item()
-                preds = logits.argmax(dim=-1).cpu().numpy()
-                results["preds"].extend(list(preds))
-                results["labels"].extend(list(labels.cpu().numpy()))
+        average_loss, accuracy, class_accuracies = validate_single(self.model, self.val_loader, self.criterion, self.device)
 
-        accuracy = compute_accuracy(
-            np.array(results["labels"]), np.array(results["preds"])
-        )
-        average_loss = total_loss / len(self.val_loader)
-
-        class_accuracies = per_class_accuracy(
-            np.array(results["labels"]), np.array(results["preds"])
-        )
 
         self.summary_writer.add_scalars(
                 "accuracy",
@@ -356,7 +342,7 @@ def get_summary_writer_log_dir(args: argparse.Namespace) -> str:
         from getting logged to the same TB log directory (which you can't easily
         untangle in TB).
     """
-    tb_log_dir_prefix = f'CNN_group_project_bs={args.batch_size}_lr={args.learning_rate}_MODELVERSION'
+    tb_log_dir_prefix = f'CNN_bs={args.batch_size}_lr={args.learning_rate}_wd={args.weight_decay}_VERSION'
     i = 0
     while i < 1000:
         tb_log_dir = args.log_dir / (tb_log_dir_prefix + str(i))

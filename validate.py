@@ -66,7 +66,7 @@ def validate_model(args):
         checkpoint = torch.load(args.checkpoint, map_location = device)
         model.load_state_dict(checkpoint['model'])
         print(f"Validating {mode} model with parameters trained for {checkpoint['epoch']} epochs.")
-        accuracy, class_accuracies = validate_single(model, validation_loader, criterion, device)
+        loss, accuracy, class_accuracies = validate_single(model, validation_loader, criterion, device)
         print(f"accuracy: {accuracy * 100:2.2f}")
         print_class_accuracies(class_accuracies)
     elif mode == 'TSCNN':
@@ -100,6 +100,8 @@ def validate_model(args):
 
 def validate_single(model, validation_loader, criterion, device):
     results = {"preds": [], "labels": []}
+    file_logits = torch.tensor([]).to(device)
+    fname_to_index = {}
     total_loss = 0
     model.eval()
 
@@ -110,9 +112,19 @@ def validate_single(model, validation_loader, criterion, device):
             logits = model(batch)
             loss = criterion(logits, labels)
             total_loss += loss.item()
-            preds = logits.argmax(dim=-1).cpu().numpy()
-            results["preds"].extend(list(preds))
-            results["labels"].extend(list(labels.cpu().numpy()))
+            # for each sample in this batch:
+            for k in range(len(filenames)):
+                fname = filenames[k]
+                if fname in fname_to_index.keys():
+                    # add the logits of the same file together.
+                    file_logits[fname_to_index[fname]] += logits[k]
+                else:
+                    # store the sumation of the logits and label for this file.
+                    fname_to_index[fname] = len(file_logits)
+                    file_logits = torch.cat((file_logits,logits[k:k+1]),0)
+                    results["labels"].append(labels.cpu().numpy()[k])
+        preds = file_logits.argmax(dim=-1).cpu().numpy()
+        results["preds"].extend(list(preds))
 
     accuracy = compute_accuracy(
         np.array(results["labels"]), np.array(results["preds"])
@@ -122,7 +134,7 @@ def validate_single(model, validation_loader, criterion, device):
     class_accuracies = per_class_accuracy(
         np.array(results["labels"]), np.array(results["preds"])
     )
-    return accuracy, class_accuracies
+    return average_loss, accuracy, class_accuracies
 
 def validate_double(model1, model2, loader_LMC, loader_MC, criterion, device):
     results = {"preds": [], "labels": []}
