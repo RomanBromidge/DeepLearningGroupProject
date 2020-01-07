@@ -64,11 +64,15 @@ def validate_model(args):
         )
         model = CNN(height=85, width=41, channels=1, class_count=10, dropout=0.5, mode = mode)
         checkpoint = torch.load(args.checkpoint, map_location = device)
+
         model.load_state_dict(checkpoint['model'])
         print(f"Validating {mode} model with parameters trained for {checkpoint['epoch']} epochs.")
+
         loss, accuracy, class_accuracies = validate_single(model, validation_loader, criterion, device)
+        
         print(f"accuracy: {accuracy * 100:2.2f}")
         print_class_accuracies(class_accuracies)
+
     elif mode == 'TSCNN':
         loader_LMC = torch.utils.data.DataLoader(
             UrbanSound8KDataset('UrbanSound8K_test.pkl', 'LMC'),
@@ -86,12 +90,16 @@ def validate_model(args):
         )
         model1 = CNN(height=85, width=41, channels=1, class_count=10, dropout=0.5, mode = 'LMC')
         model2 = CNN(height=85, width=41, channels=1, class_count=10, dropout=0.5, mode = 'MC')
+
         checkpoint1 = torch.load(args.checkpoint, map_location = device)
         model1.load_state_dict(checkpoint1['model'])
+
         checkpoint2 = torch.load(args.checkpoint2, map_location = device)
         model2.load_state_dict(checkpoint2['model'])
+
         print(f"Validating {mode} model with parameters trained for {checkpoint1['epoch']} and {checkpoint2['epoch']} epochs.")
         accuracy, class_accuracies = validate_double(model1, model2, loader_LMC, loader_MC, criterion, device)
+
         print(f"accuracy: {accuracy * 100:2.2f}")
         print_class_accuracies(class_accuracies)
     else:

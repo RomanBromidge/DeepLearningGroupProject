@@ -111,15 +111,19 @@ else:
 def main(args):
     transform = transforms.ToTensor()
     mode = args.mode
+    train_data = UrbanSound8KDataset('UrbanSound8K_train.pkl', mode)
+    print(f"train length: [{len(train_data)}]")
     train_loader = torch.utils.data.DataLoader(
-      UrbanSound8KDataset('UrbanSound8K_train.pkl', mode),
+      train_data,
       batch_size=args.batch_size,
       shuffle=True,
       num_workers=args.worker_count,
       pin_memory=True
     )
+    test_data = UrbanSound8KDataset('UrbanSound8K_test.pkl', mode)
+    print(f"test length: [{len(test_data)}]")
     val_loader = torch.utils.data.DataLoader(
-     UrbanSound8KDataset('UrbanSound8K_test.pkl', mode),
+     test_data,
      batch_size=args.batch_size,
      shuffle=True,
      num_workers=args.worker_count,
@@ -200,11 +204,25 @@ class Trainer:
 
                 ## Forward pass through the network.
                 logits = self.model.forward(batch)
-                # print(logits.shape)
-                # import sys; sys.exit(1)
+
+                ## Format logits
+                results = {"preds": [], "labels": []}
+                file_logits = torch.tensor([]).to(self.device)
+                fname_to_index = {}
+                # for each sample in this batch:
+                for k in range(len(filenames)):
+                    fname = filenames[k]
+                    if fname in fname_to_index.keys():
+                        # add the logits of the same file together.
+                        file_logits[fname_to_index[fname]] += logits[k]
+                    else:
+                        # store the sumation of the logits and label for this file.
+                        fname_to_index[fname] = len(file_logits)
+                        file_logits = torch.cat((file_logits,logits[k:k+1]),0)
+                        results["labels"].append(labels.cpu().numpy()[k])
 
                 ## Compute the loss using the specified criterion.
-                loss = self.criterion(logits, labels)
+                loss = self.criterion(file_logits, results["labels"])
 
                 ## Compute the backward pass
                 loss.backward()
@@ -214,8 +232,9 @@ class Trainer:
                 self.optimizer.zero_grad()
 
                 with torch.no_grad():
-                    preds = logits.argmax(-1)
-                    accuracy = compute_accuracy(labels, preds)
+                    preds = file_logits.argmax(-1)
+                    results["preds"].extend(list(preds))
+                    accuracy = compute_accuracy(results["labels"], results["preds"])
 
                 data_load_time = data_load_end_time - data_load_start_time
                 step_time = time.time() - data_load_end_time
@@ -268,7 +287,6 @@ class Trainer:
     def validate(self):
 
         average_loss, accuracy, class_accuracies = validate_single(self.model, self.val_loader, self.criterion, self.device)
-
 
         self.summary_writer.add_scalars(
                 "accuracy",

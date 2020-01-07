@@ -63,7 +63,7 @@ class CNN(nn.Module):
             in_channels=64,
             out_channels=64,
             kernel_size=(3, 3),
-            # stride=(2, 2),
+            stride=(2, 2),
             padding=(1, 1),
             bias = False
         )
@@ -71,7 +71,7 @@ class CNN(nn.Module):
         self.conv4_bn = nn.BatchNorm2d(64)
 
         #Max pooling
-        self.pool2 = nn.MaxPool2d(kernel_size=(2, 2), stride=(2, 2), padding=(1,1))
+        # self.pool2 = nn.MaxPool2d(kernel_size=(2, 2), stride=(2, 2), padding=(1,1))
 
         #First fully connected layer
         size = 15488
@@ -79,7 +79,7 @@ class CNN(nn.Module):
             size = 26048
         self.fc1 = nn.Linear(size, 1024, bias = False)
         self.initialise_layer(self.fc1)
-        self.fc1_bn = nn.BatchNorm1d(1024)
+        # self.fc1_bn = nn.BatchNorm1d(1024)
 
         #Final fully connected layer
         self.fc2 = nn.Linear(1024, 10)
@@ -92,9 +92,9 @@ class CNN(nn.Module):
         x = self.pool1(x)
         x = F.relu(self.conv3_bn(self.conv3(x)))
         x = self.dropout2d(F.relu(self.conv4_bn(self.conv4(x))))
-        x = self.pool2(x)
+        # x = self.pool2(x)
         x = torch.flatten(x, start_dim=1)
-        x = self.dropout(torch.sigmoid(self.fc1_bn(self.fc1(x))))
+        x = self.dropout(torch.sigmoid(self.fc1(x)))
         x = self.fc2(x)
         return x
 
