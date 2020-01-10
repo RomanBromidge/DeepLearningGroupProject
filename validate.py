@@ -69,7 +69,7 @@ def validate_model(args):
         print(f"Validating {mode} model with parameters trained for {checkpoint['epoch']} epochs.")
 
         loss, accuracy, class_accuracies = validate_single(model, validation_loader, criterion, device)
-        
+
         print(f"accuracy: {accuracy * 100:2.2f}")
         print_class_accuracies(class_accuracies)
 
