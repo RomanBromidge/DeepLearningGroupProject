@@ -149,7 +149,7 @@ def validate_double(model1, model2, loader_LMC, loader_MC, criterion, device):
     total_loss = 0
     model1.eval()
     model2.eval()
-    normalize = Softmax()
+    normalize = Softmax(dim=1)
     loader_MC = iter(loader_MC)
     model1.to(device)
 
