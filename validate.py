@@ -151,6 +151,7 @@ def validate_double(model1, model2, loader_LMC, loader_MC, criterion, device):
     model2.eval()
     normalize = Softmax()
     loader_MC = iter(loader_MC)
+    model1.to(device)
 
     with torch.no_grad():
         for i, (inputs1, targets, filenames) in enumerate(loader_LMC):
