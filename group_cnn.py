@@ -126,14 +126,17 @@ def main(args):
      pin_memory=True
     )
 
-    model = CNN(height=85, width=41, channels=1, class_count=10, dropout=args.dropout,mode = args.mode)
+    ## Build a model based on mode
+    if args.mode == 'MLMC':
+        model = CNN(height=145, width=41, channels=1, class_count=10, dropout=args.dropout,mode = args.mode)
+    else:
+        model = CNN(height=85, width=41, channels=1, class_count=10, dropout=args.dropout,mode = args.mode)
 
     ## TASK 8: Redefine the criterion to be softmax cross entropy
     criterion = nn.CrossEntropyLoss()
 
     ## Use adam optimizer. AdamW is Adam with L-2 regularisation.
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
-    ##optimizer = torch.optim.SGD(model.parameters(), args.learning_rate, momentum = 0.9, weight_decay=args.weight_decay)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
 
     log_dir = get_summary_writer_log_dir(args)
     print(f"Writing logs to {log_dir}")
