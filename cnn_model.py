@@ -55,7 +55,7 @@ class CNN(nn.Module):
             padding=(1, 1),
             bias = False
         )
-        self.initialise_layer(self.conv1)
+        self.initialise_layer(self.conv3)
         self.conv3_bn = nn.BatchNorm2d(64)
 
         #Fourth convolutional layer
@@ -67,7 +67,7 @@ class CNN(nn.Module):
             padding=(1, 1),
             bias = False
         )
-        self.initialise_layer(self.conv2)
+        self.initialise_layer(self.conv4)
         self.conv4_bn = nn.BatchNorm2d(64)
 
         #Max pooling

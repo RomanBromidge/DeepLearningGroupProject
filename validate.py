@@ -139,7 +139,7 @@ def validate_single(model, validation_loader, criterion, device):
     )
 
     print(f"Saving model to output-MC.pkl")
-    output = np.array(results["labels"]) == np.array(results["preds"])
+    output = np.equal(np.array(results["labels"]), np.array(results["preds"])
     torch.save({
         'output': output
     }, "output-MC.pkl")
@@ -180,7 +180,7 @@ def validate_double(model1, model2, loader_LMC, loader_MC, criterion, device):
     )
 
     print(f"Saving model to output-TSCNN.pkl")
-    output = results["labels"] == results["preds"]
+    output = np.equal(np.array(results["labels"]), np.array(results["preds"])
     torch.save({
         'output': output
     }, "output-TSCNN.pkl")
