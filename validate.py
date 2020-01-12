@@ -137,6 +137,13 @@ def validate_single(model, validation_loader, criterion, device):
     accuracy = compute_accuracy(
         np.array(results["labels"]), np.array(results["preds"])
     )
+
+    print(f"Saving model to output-MC.pkl")
+    output = np.array(results["labels"]) == np.array(results["preds"])
+    torch.save({
+        'output': output
+    }, "output-MC.pkl")
+
     average_loss = total_loss / len(validation_loader)
 
     class_accuracies = per_class_accuracy(
@@ -171,6 +178,13 @@ def validate_double(model1, model2, loader_LMC, loader_MC, criterion, device):
     accuracy = compute_accuracy(
         np.array(results["labels"]), np.array(results["preds"])
     )
+
+    print(f"Saving model to output-TSCNN.pkl")
+    output = results["labels"] == results["preds"]
+    torch.save({
+        'output': output
+    }, "output-TSCNN.pkl")
+
     average_loss = total_loss / len(loader_LMC)
 
     class_accuracies = per_class_accuracy(
