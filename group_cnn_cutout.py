@@ -122,18 +122,41 @@ if torch.cuda.is_available():
 else:
     DEVICE = torch.device("cpu")
 
+## Normalise function adapted from "Improved Regularisation of Convolutional Neural Networks with Cutout"
+def normalize(mode):
+    if mode == "LMC":
+        mean = np.array([-14.382372])
+        std = np.array([17.521511])
+    elif mode == "MC":
+        mean = np.array([0.451255])
+        std = np.array([22.878143])
+    elif mode == "MLMC":
+        mean = np.array([-9.1094675])
+        std = np.array([22.504889])
+
+    def _normalize(image):
+        image = np.asarray(image).astype(np.float32)
+        image = (image - mean) / std
+        return image
+
+    return _normalize
+
 ## Cutout function adapted from "Improved Regularisation of Convolutional Neural Networks with Cutout"
-def cutout(mask_size, p, cutout_inside, mask_color=(0, 0, 0)):
+def cutout(mask_size, p, cutout_inside, mode, mask_color=(0)):
     mask_size_half = mask_size // 2
     offset = 1 if mask_size % 2 == 0 else 0
 
     def _cutout(image):
         image = np.asarray(image).copy()
+        if mode == "MLMC":
+            image = image.reshape((145, 41))
+        else:
+            image = image.reshape((85, 41))
 
         if np.random.random() > p:
             return image
 
-        h, w = image.shape[:2]
+        h, w = image.shape[:]
 
         if cutout_inside:
             cxmin, cxmax = mask_size_half, w + offset - mask_size_half
@@ -153,19 +176,27 @@ def cutout(mask_size, p, cutout_inside, mask_color=(0, 0, 0)):
         xmax = min(w, xmax)
         ymax = min(h, ymax)
         image[ymin:ymax, xmin:xmax] = mask_color
+
+        if mode == "MLMC":
+            image = image.reshape((1, 145, 41))
+        else:
+            image = image.reshape((1, 85, 41))
+
         return image
 
     return _cutout
 
 
 def main(args):
+    mode = args.mode
+
+    #Construct the data transform for cutout
     train_transform = transforms.Compose([
-        cutout(args.cutout_size, args.cutout_prob, args.cutout_inside),
+        normalise(mode),
+        cutout(args.cutout_size, args.cutout_prob, args.cutout_inside, mode),
         transforms.ToTensor()
     ])
     test_transform = transforms.ToTensor()
-
-    mode = args.mode
 
     train_loader = torch.utils.data.DataLoader(
       UrbanSound8KDataset('UrbanSound8K_train.pkl', mode, train_transform),
