@@ -138,11 +138,11 @@ def validate_single(model, validation_loader, criterion, device):
         np.array(results["labels"]), np.array(results["preds"])
     )
 
-    print(f"Saving model to output-MC.pkl")
-    output = np.equal(np.array(results["labels"]), np.array(results["preds"])
+    print(f"Saving model to output-MLMC.pkl")
+    output = np.equal(np.array(results["labels"]), np.array(results["preds"]))
     torch.save({
         'output': output
-    }, "output-MC.pkl")
+    }, "output-MLMC.pkl")
 
     average_loss = total_loss / len(validation_loader)
 
@@ -180,7 +180,7 @@ def validate_double(model1, model2, loader_LMC, loader_MC, criterion, device):
     )
 
     print(f"Saving model to output-TSCNN.pkl")
-    output = np.equal(np.array(results["labels"]), np.array(results["preds"])
+    output = np.equal(np.array(results["labels"]), np.array(results["preds"]))
     torch.save({
         'output': output
     }, "output-TSCNN.pkl")
