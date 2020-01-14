@@ -120,14 +120,14 @@ def validate_single(model, validation_loader, criterion, device):
             logits = model(batch)
             loss = criterion(logits, labels)
             total_loss += loss.item()
-            # for each sample in this batch:
+            # For each sample in this batch:
             for k in range(len(filenames)):
                 fname = filenames[k]
                 if fname in fname_to_index.keys():
-                    # add the logits of the same file together.
+                    # Add the logits of the same file together.
                     file_logits[fname_to_index[fname]] += logits[k]
                 else:
-                    # store the sumation of the logits and label for this file.
+                    # Store the sumation of the logits and label for this file.
                     fname_to_index[fname] = len(file_logits)
                     file_logits = torch.cat((file_logits,logits[k:k+1]),0)
                     results["labels"].append(labels.cpu().numpy()[k])

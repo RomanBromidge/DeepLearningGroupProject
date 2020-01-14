@@ -36,8 +36,8 @@ class UrbanSound8KDataset(data.Dataset):
         else:
             raise ValueError('Illegal Argument: mode must be one of {LMC,MC,MLMC},' +
                             ' not ' + self.mode)
-                            
-        #Transform the image
+
+        # Transform the image
         if self.transform:
             feature = self.transform(feature)
 

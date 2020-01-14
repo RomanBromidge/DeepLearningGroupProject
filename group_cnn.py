@@ -132,7 +132,7 @@ def main(args):
     else:
         model = CNN(height=85, width=41, channels=1, class_count=10, dropout=args.dropout,mode = args.mode)
 
-    ## TASK 8: Redefine the criterion to be softmax cross entropy
+    ## Redefine the criterion to be softmax cross entropy
     criterion = nn.CrossEntropyLoss()
 
     ## Use adam optimizer. AdamW is Adam with L-2 regularisation.
@@ -196,7 +196,7 @@ class Trainer:
             self.model.train()
             data_load_start_time = time.time()
             for i, (inputs, targets, filenames) in enumerate(self.train_loader):
-            # for batch, labels in self.train_loader:
+            # For batch, labels in self.train_loader:
                 batch = inputs.to(self.device)
                 labels = targets.to(self.device)
                 data_load_end_time = time.time()
