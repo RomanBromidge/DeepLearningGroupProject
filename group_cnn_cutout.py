@@ -143,7 +143,7 @@ def normalize(mode):
     return _normalize
 
 ## Cutout function adapted from "Improved Regularisation of Convolutional Neural Networks with Cutout"
-def cutout(mask_size, p, cutout_inside, mode, mask_color=Double(0)):
+def cutout(mask_size, p, cutout_inside, mode, mask_color=(0.0)):
     mask_size_half = mask_size // 2
     offset = 1 if mask_size % 2 == 0 else 0
 
