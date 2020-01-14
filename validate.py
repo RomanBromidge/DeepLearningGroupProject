@@ -120,14 +120,14 @@ def validate_single(model, validation_loader, criterion, device):
             logits = model(batch)
             loss = criterion(logits, labels)
             total_loss += loss.item()
-            # for each sample in this batch:
+            # For each sample in this batch:
             for k in range(len(filenames)):
                 fname = filenames[k]
                 if fname in fname_to_index.keys():
-                    # add the logits of the same file together.
+                    # Add the logits of the same file together.
                     file_logits[fname_to_index[fname]] += logits[k]
                 else:
-                    # store the sumation of the logits and label for this file.
+                    # Store the sumation of the logits and label for this file.
                     fname_to_index[fname] = len(file_logits)
                     file_logits = torch.cat((file_logits,logits[k:k+1]),0)
                     results["labels"].append(labels.cpu().numpy()[k])
@@ -153,12 +153,15 @@ def validate_single(model, validation_loader, criterion, device):
 
 def validate_double(model1, model2, loader_LMC, loader_MC, criterion, device):
     results = {"preds": [], "labels": []}
+    file_logits = torch.tensor([]).to(device)
+    fname_to_index = {}
     total_loss = 0
     model1.eval()
     model2.eval()
     normalize = Softmax(dim=1)
     loader_MC = iter(loader_MC)
     model1.to(device)
+    model2.to(device)
 
     with torch.no_grad():
         for i, (inputs1, targets, filenames) in enumerate(loader_LMC):
@@ -171,9 +174,19 @@ def validate_double(model1, model2, loader_LMC, loader_MC, criterion, device):
             logits = (logits1 + logits2)/2
             loss = criterion(logits, labels)
             total_loss += loss.item()
-            preds = logits.argmax(dim=-1).cpu().numpy()
-            results["preds"].extend(list(preds))
-            results["labels"].extend(list(labels.cpu().numpy()))
+            # For each sample in this batch:
+            for k in range(len(filenames)):
+                fname = filenames[k]
+                if fname in fname_to_index.keys():
+                    # Add the logits of the same file together.
+                    file_logits[fname_to_index[fname]] += logits[k]
+                else:
+                    # Store the sumation of the logits and label for this file.
+                    fname_to_index[fname] = len(file_logits)
+                    file_logits = torch.cat((file_logits,logits[k:k+1]),0)
+                    results["labels"].append(labels.cpu().numpy()[k])
+        preds = file_logits.argmax(dim=-1).cpu().numpy()
+        results["preds"].extend(list(preds))
 
     accuracy = compute_accuracy(
         np.array(results["labels"]), np.array(results["preds"])

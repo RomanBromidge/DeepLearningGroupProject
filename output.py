@@ -7,6 +7,7 @@ import pickle
 
 dataset = pickle.load(open("UrbanSound8K_test.pkl", 'rb'))
 
+# Code created for viewing the output files
 #output = torch.load("output-MLMC.pkl")
 
 #outputView = output["output"]
@@ -14,7 +15,7 @@ dataset = pickle.load(open("UrbanSound8K_test.pkl", 'rb'))
 
 # Script to compare outputs (list for each checkpoint that shows if the segments where
 # correctly classified)
-
+# This code was created for the Qualitative Results section of the report
 def classFromIdx (index):
     item = dataset[index]
     itemClass = item["class"]
@@ -38,9 +39,8 @@ def compareB ():
     outputLMC = outputLMC["output"]
 
     for i in range(len(outputMC)):
-        #for k in range (0,3):
-            if outputMC[i] != outputLMC[i]:
-                print (i)
+        if outputMC[i] != outputLMC[i]:
+            print (i)
 
 def compareC ():
     outputMC = torch.load("output-MC.pkl")
