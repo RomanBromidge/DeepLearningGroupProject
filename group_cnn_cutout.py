@@ -143,7 +143,7 @@ def normalize(mode):
     return _normalize
 
 ## Cutout function adapted from "Improved Regularisation of Convolutional Neural Networks with Cutout"
-def cutout(mask_size, p, cutout_inside, mode, mask_color=(0)):
+def cutout(mask_size, p, cutout_inside, mode, mask_color=Double(0)):
     mask_size_half = mask_size // 2
     offset = 1 if mask_size % 2 == 0 else 0
 
@@ -280,6 +280,7 @@ class Trainer:
         start_epoch: int = 0
     ):
         self.model.train()
+        self.model.float()
         for epoch in range(start_epoch, epochs):
             self.model.train()
             data_load_start_time = time.time()
@@ -290,7 +291,7 @@ class Trainer:
                 data_load_end_time = time.time()
 
                 ## Forward pass through the network.
-                logits = self.model.forward(batch)
+                logits = self.model.forward(batch.float())
 
                 ## Compute the loss using the specified criterion.
                 loss = self.criterion(logits, labels)
