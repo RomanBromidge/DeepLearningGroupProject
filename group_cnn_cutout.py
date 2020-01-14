@@ -137,6 +137,7 @@ def normalize(mode):
     def _normalize(image):
         image = np.asarray(image).astype(np.float32)
         image = (image - mean) / std
+        image = torch.from_numpy(image)
         return image
 
     return _normalize
@@ -182,6 +183,8 @@ def cutout(mask_size, p, cutout_inside, mode, mask_color=(0)):
         else:
             image = image.reshape((1, 85, 41))
 
+        image = torch.from_numpy(image)
+
         return image
 
     return _cutout
@@ -192,11 +195,9 @@ def main(args):
 
     #Construct the data transform for cutout
     train_transform = transforms.Compose([
-        normalise(mode),
-        cutout(args.cutout_size, args.cutout_prob, args.cutout_inside, mode),
-        transforms.ToTensor()
+        normalize(mode),
+        cutout(args.cutout_size, args.cutout_prob, args.cutout_inside, mode)
     ])
-    test_transform = transforms.ToTensor()
 
     train_loader = torch.utils.data.DataLoader(
       UrbanSound8KDataset('UrbanSound8K_train.pkl', mode, train_transform),
