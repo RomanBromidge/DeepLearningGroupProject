@@ -3,7 +3,8 @@ import numpy as np
 from pathlib import Path
 from cnn_model import CNN
 from typing import Union
-from dataset import UrbanSound8KDataset
+from dataset_cutout import UrbanSound8KDataset
+from torchvision import transforms
 from multiprocessing import cpu_count
 from torch.nn import CrossEntropyLoss, Softmax
 
@@ -46,6 +47,26 @@ parser.add_argument(
     help="Number of worker processes used to load data.",
 )
 
+## Normalise function adapted from "Improved Regularisation of Convolutional Neural Networks with Cutout"
+def normalize(mode):
+    if mode == "LMC":
+        mean = np.array([-14.382372])
+        std = np.array([17.521511])
+    elif mode == "MC":
+        mean = np.array([0.451255])
+        std = np.array([22.878143])
+    elif mode == "MLMC":
+        mean = np.array([-9.1094675])
+        std = np.array([22.504889])
+
+    def _normalize(image):
+        image = np.asarray(image).astype(np.float32)
+        image = (image - mean) / std
+        image = torch.from_numpy(image)
+        return image
+
+    return _normalize
+
 def validate_model(args):
     if torch.cuda.is_available():
         device = torch.device("cuda")
@@ -55,8 +76,12 @@ def validate_model(args):
     mode = args.mode
 
     if mode in ['MC','LMC','MLMC']:
+        test_transform = transforms.Compose([
+            normalize(mode)
+        ])
+
         validation_loader = torch.utils.data.DataLoader(
-            UrbanSound8KDataset('UrbanSound8K_test.pkl', mode),
+            UrbanSound8KDataset('UrbanSound8K_test.pkl', mode, test_transform),
             batch_size=args.batch_size,
             shuffle=True,
             num_workers=args.worker_count,
@@ -74,15 +99,22 @@ def validate_model(args):
         print_class_accuracies(class_accuracies)
 
     elif mode == 'TSCNN':
+        LMC_transform = transforms.Compose([
+            normalize('LMC')
+        ])
+        MC_transform = transforms.Compose([
+            normalize('MC')
+        ])
+
         loader_LMC = torch.utils.data.DataLoader(
-            UrbanSound8KDataset('UrbanSound8K_test.pkl', 'LMC'),
+            UrbanSound8KDataset('UrbanSound8K_test.pkl', 'LMC', LMC_transform),
             batch_size=args.batch_size,
             shuffle=False,
             num_workers=args.worker_count,
             pin_memory=True
         )
         loader_MC = torch.utils.data.DataLoader(
-            UrbanSound8KDataset('UrbanSound8K_test.pkl', 'MC'),
+            UrbanSound8KDataset('UrbanSound8K_test.pkl', 'MC', MC_transform),
             batch_size=args.batch_size,
             shuffle=False,
             num_workers=args.worker_count,
@@ -159,6 +191,8 @@ def validate_double(model1, model2, loader_LMC, loader_MC, criterion, device):
     total_loss = 0
     model1.eval()
     model2.eval()
+    model1.float()
+    model2.float()
     normalize = Softmax(dim=1)
     loader_MC = iter(loader_MC)
     model1.to(device)
@@ -170,8 +204,8 @@ def validate_double(model1, model2, loader_LMC, loader_MC, criterion, device):
             batch1 = inputs1.to(device)
             batch2 = inputs2.to(device)
             labels = targets.to(device)
-            logits1 = normalize(model1(batch1))
-            logits2 = normalize(model2(batch2))
+            logits1 = model1(batch1.float())
+            logits2 = model2(batch2.float())
             logits = (logits1 + logits2)/2
             loss = criterion(logits, labels)
             total_loss += loss.item()
