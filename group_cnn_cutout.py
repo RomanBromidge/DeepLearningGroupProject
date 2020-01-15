@@ -17,7 +17,7 @@ from dataset_cutout import UrbanSound8KDataset
 import argparse
 from pathlib import Path
 from cnn_model_cutout import CNN
-from validate import validate_single
+from validate_cutout import validate_single
 
 torch.backends.cudnn.benchmark = True
 
@@ -199,6 +199,11 @@ def main(args):
         cutout(args.cutout_size, args.cutout_prob, args.cutout_inside, mode)
     ])
 
+    # Construct the data transform for testing
+    test_transform = transforms.Compose([
+        normalize(mode)
+    ])
+
     train_loader = torch.utils.data.DataLoader(
       UrbanSound8KDataset('UrbanSound8K_train.pkl', mode, train_transform),
       batch_size=args.batch_size,
@@ -207,7 +212,7 @@ def main(args):
       pin_memory=True
     )
     val_loader = torch.utils.data.DataLoader(
-     UrbanSound8KDataset('UrbanSound8K_test.pkl', mode),
+     UrbanSound8KDataset('UrbanSound8K_test.pkl', mode, test_transform),
      batch_size=args.batch_size,
      shuffle=True,
      num_workers=args.worker_count,
