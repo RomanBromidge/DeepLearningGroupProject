@@ -102,7 +102,7 @@ parser.add_argument(
 )
 parser.add_argument(
     "--cutout-size",
-    type=int, default=16,
+    type=int, default=32,
     help="Size of cutout operation."
 )
 parser.add_argument(
